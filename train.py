@@ -1,7 +1,8 @@
 import torch
 from torch import nn, optim
 from torch.utils.data import DataLoader
-from torchvision import datasets, transforms
+from torchvision import datasets
+from torchvision.transforms import v2
 from model import FlowerModel
 import mlflow
 import mlflow.pytorch
@@ -11,15 +12,19 @@ batch_size = 32
 learning_rate = 0.001
 num_epochs = 10
 num_classes = 5
+input_image_shape = (256, 256)
 
 # Data preparation
-transform = transforms.Compose([
-    transforms.Resize((256, 256)),
-    transforms.ToTensor(),
-    transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-])
 
-train_dataset = datasets.ImageFolder(root='data/train', transform=transform)
+simple_transform = v2.Compose([
+        v2.Resize(input_image_shape),
+        v2.ToImage(),
+        v2.ToDtype(torch.float32, scale=True)
+    ])
+
+dataset = datasets.ImageFolder(root='flowers', transform=simple_transform)
+
+train_dataset, val_dataset, test_dataset = torch.utils.data.random_split(dataset, [0.8, 0.1, 0.1])
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
 val_dataset = datasets.ImageFolder(root='data/val', transform=transform)

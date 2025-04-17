@@ -1,3 +1,4 @@
+from numpy import pad
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -36,17 +37,26 @@ class SimpleBlock(nn.Module):
         return x
 
 class FlowerModel(nn.Module):
-    def __init__(self, n_blocks=4, start_channels=32):
+    def __init__(self, n_blocks=4, start_channels=32, adaptive_pool_size=2):
         super().__init__()
         channels = [3] + [start_channels * (2**i) for i in range(n_blocks)]
         self.blocks = nn.ModuleList([
             SimpleBlock(channels[i], channels[i+1]) 
             for i in range(n_blocks)
         ])
+        self.classifier = nn.Linear(channels[-1]*adaptive_pool_size**2, 5)
+        self.conv = nn.Conv2d(channels[-1], 256, kernel_size=3,stride=2,padding=1)
+        self.global_pool = nn.AdaptiveMaxPool2d(adaptive_pool_size)
+
+        
     def forward(self, x):
         for block in self.blocks:
             x = block(x)
-        
+        x = self.conv(x)
+        x = self.global_pool(x)
+        #print(x.shape)
+        x = x.flatten(1)
+        x = self.classifier(x)
         return x
     
 

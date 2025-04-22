@@ -2,3 +2,8 @@
 test.py
 .venv
 flowers/
+mlruns/
+__pycache__/
+mlartifacts/
+*.txt
+models/

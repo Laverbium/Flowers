@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-from torchvision.models import resnet34, ResNet34_Weights, inception_v3, Inception_V3_Weights
+from torchvision.models import resnet34, ResNet34_Weights, inception_v3, Inception_V3_Weights, vit_b_16, ViT_B_16_Weights
 from torchvision.transforms import v2
 import sys
 import time 
@@ -18,6 +18,27 @@ resnet_transform = v2.Compose([
     v2.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]),
 ])
 """
+class ViT(nn.Module):
+    def __init__(self, pretrained=True, freeze_layers = True):
+        super().__init__()
+        self.freeze = freeze_layers
+        weights = ViT_B_16_Weights.DEFAULT if pretrained else None
+        self.body = vit_b_16(weights=weights)
+        if freeze_layers:
+            for param in self.body.parameters():
+                param.requires_grad = False
+        self.body.heads.head = nn.Identity()
+        self.fc = nn.Sequential(nn.Linear(768, 1024),
+                                 nn.ReLU(),
+                                 nn.Linear(1024, 5))
+        print([name for name, param in self.body.named_parameters() if param.requires_grad])
+        print([name for name, param in self.fc.named_parameters() if param.requires_grad])
+
+    def forward(self, x):
+        x = self.body(x)
+        x = self.fc(x)
+        return x
+    
 class Inceptionv3(nn.Module):
     def __init__(self, pretrained=True, freeze_layers = True, top_layer=True, aux_logits=True):
         super().__init__()
@@ -93,6 +114,7 @@ class SimpleBlock(nn.Module):
             x = module(x)
         return x
 
+#Simple baseline
 class FlowerModel(nn.Module):
     def __init__(self, n_blocks=4, start_channels=32, adaptive_pool_size=2):
         super().__init__()

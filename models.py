@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
-from torchvision.models import resnet34, ResNet34_Weights, inception_v3, Inception_V3_Weights, vit_b_16, ViT_B_16_Weights
+from torchvision import models
 from torchvision.transforms import v2
 import sys
 import time 
@@ -22,8 +22,8 @@ class ViT(nn.Module):
     def __init__(self, pretrained=True, freeze_layers = True):
         super().__init__()
         self.freeze = freeze_layers
-        weights = ViT_B_16_Weights.DEFAULT if pretrained else None
-        self.body = vit_b_16(weights=weights)
+        weights = models.ViT_B_16_Weights.DEFAULT if pretrained else None
+        self.body = models.vit_b_16(weights=weights)
         if freeze_layers:
             for param in self.body.parameters():
                 param.requires_grad = False
@@ -43,8 +43,8 @@ class Inceptionv3(nn.Module):
     def __init__(self, pretrained=True, freeze_layers = True, top_layer=True, aux_logits=True):
         super().__init__()
         self.freeze = freeze_layers
-        weights = Inception_V3_Weights.DEFAULT if pretrained else None
-        self.body = inception_v3(weights=weights)
+        weights = models.Inception_V3_Weights.DEFAULT if pretrained else None
+        self.body = models.inception_v3(weights=weights)
         self.aux_logits = aux_logits
         self.top_layer = top_layer
         
@@ -73,25 +73,27 @@ class Inceptionv3(nn.Module):
 
 
 class ResNet(nn.Module):
-    def __init__(self, pretrained=True, freeze_layers = True):
+    def __init__(self,type='101', pretrained=True, freeze_layers = True):
         super().__init__()
         self.freeze = freeze_layers
-        weights = ResNet34_Weights.DEFAULT if pretrained else None
-        self.body = resnet34(weights=weights)
+        weights = 'DEFAULT' if pretrained else None
+        self.body = getattr(models, f"resnet{type}")(weights=weights)
         if freeze_layers:
             for param in self.resnet.parameters():
                 param.requires_grad = False
+        in_features = self.body.fc.in_features
+        out_features = self.body.fc.out_features
         self.body.fc = nn.Identity()
-        # self.fc = nn.Sequential(nn.Linear(512, 1024),
-        #                         nn.ReLU(),
-        #                         nn.Linear(1024, 5))
-        self.fc = nn.Linear(512,5)
+        self.fc = nn.Sequential(nn.Linear(in_features, 1024),
+                                nn.GELU(),
+                                nn.Linear(1024, 5))
+        #self.fc = nn.Linear(out_features,5)
         #print([name for name, param in self.resnet.named_parameters() if param.requires_grad])
     def forward(self, x):
         x = self.body(x)
         x = self.fc(x)
         return x
-    
+    #
 class SimpleBlock(nn.Module):
     conv_params = {'kernel_size': 3, 'stride': 1, 'padding': 1}
     def __init__(self, in_fan, out_fan, conv_params=None, dropout=0, pool=True, batchnorm=True):

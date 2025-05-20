@@ -1,4 +1,3 @@
-import test
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from torchvision.transforms import v2
@@ -11,6 +10,7 @@ from torchvision.datasets import ImageFolder
 import mlflow
 import numpy as np
 import math
+
 resize_shape = (224, 224)
 test_transform = v2.Compose([
         v2.ToImage(),
@@ -37,21 +37,17 @@ def load_model(path_or_id):
     return model
 
 def process_image(image_path, resize_shape = (224, 224)):
-    # Define the same transforms used during training
-    
     image = Image.open(image_path).convert('RGB')
     return test_transform(image), image
 
-def plot_predictions(images, predictions, class_names,cols=3,figsize=None):
+def plot_predictions(images, predictions, class_names, cols=3):
     n = len(images)
     rows = math.ceil(n / cols)
-    # Determine figure size if not provided
-    if figsize is None:
-        figsize = (cols * 5, rows * 3)
+    
+    figsize = (19,10) 
     
     fig, axs = plt.subplots(rows, cols * 2, figsize=figsize)
-    
-    # Normalize axs to 2D list
+    y_pos = range(len(class_names))
     if rows == 1:
         axs = [axs]
     for idx, (img, pred) in enumerate(zip(images, predictions)):
@@ -61,21 +57,14 @@ def plot_predictions(images, predictions, class_names,cols=3,figsize=None):
         ax_img = axs[row][2 * col]
         ax_bar = axs[row][2 * col + 1]
         
-        # Show image
         ax_img.imshow(img)
         ax_img.axis('off')
         
-        # Show horizontal bar chart of probabilities
-        y_pos = range(len(class_names))
         ax_bar.barh(y_pos, pred)
-        ax_bar.set_yticks(y_pos)
-        ax_bar.set_yticklabels(class_names)
-        ax_bar.set_xlim(0, 1)
-        ax_bar.invert_yaxis()
-        ax_bar.set_xlabel('Probability')
-    
-    # Turn off any unused axes
+        ax_bar.set_yticks(y_pos, labels = class_names)
+        
     total_axes = rows * cols * 2
+
     for j in range(2 * n, total_axes):
         row = j // (cols * 2)
         col = j % (cols * 2)
@@ -91,28 +80,28 @@ if __name__ == '__main__':
     parser.add_argument('image_path', type=str, help='Path to directory of images')
     args = parser.parse_args()
 
-    # Load the model
+    
     model = load_model(args.model_path)
     model.to(device)
-    # Create dataset
+    
     dataset = ImageFolder(args.image_path, transform=test_transform)
     dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
     print(f"Found_images: {len(dataset)}")
-    # Process images
+   
     original_images = []
     predictions = []
 
     for inputs, _ in dataloader:
-        # Get original image
+        
         img_path = dataset.samples[len(original_images)][0]
         original_images.append(Image.open(img_path).convert('RGB'))
         
-        # Get predictions
+       
         with torch.no_grad():
             inputs = inputs.to(device)
             output = model(inputs)
             pred = F.softmax(output[0], dim=0)
             predictions.append(pred.cpu())
 
-    # Plot results
+    
     plot_predictions(original_images, predictions, class_names)

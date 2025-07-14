@@ -1,16 +1,16 @@
 # Flower Classification Project
 
-flower classification project. This is a fun (and sometimes challenging) journey into deep learning, computer vision, and MLOps. Here’s what this repo is all about, why I’m doing it, and what I’ve learned along the way.
+ Here’s what this repo is all about, why I’m doing it, and what I’ve learned along the way.
 
 ---
 
-## Why am I doing this?
+## Purpose
 
 I wanted to get hands-on with modern machine learning workflows, not just building a model, but also tracking experiments, handling data, and making the whole thing reproducible. Flowers are a classic dataset—colorful, varied, and just complicated enough to be interesting.
 
 ---
 
-## What’s the goal?
+## Goal
 
 The main goal is to build a robust image classifier and try different approaches to see how it would influence the result. I wanted to:
 
@@ -22,7 +22,7 @@ The main goal is to build a robust image classifier and try different approaches
 
 ---
 
-## How did I approach it?
+## Approach
 
 - **Data:** Used the classic flowers dataset, loaded with PyTorch’s `ImageFolder`.
 - **Transforms:** Spent a lot of time tweaking data augmentations—random crops, flips, normalization, and even some Gaussian noise. Got clearly threshold of overfitting and underfitting the model with the usage of different transforms techniques
@@ -35,4 +35,4 @@ The main goal is to build a robust image classifier and try different approaches
 ---
 
 ## Final thoughts
-Wanted just to create simple code to train model on some dataset for visualisation task(which is not my part of deep learning, actually i studied more on LLM  and NLPstuff)
+Wanted just to create simple code to train model on some dataset for visualisation task(which is not my part of deep learning, actually i studied more on LLM  and NLP stuff)
